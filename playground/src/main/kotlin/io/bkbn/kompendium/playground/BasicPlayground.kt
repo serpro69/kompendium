@@ -8,9 +8,12 @@ import io.bkbn.kompendium.json.schema.KotlinXSchemaConfigurator
 import io.bkbn.kompendium.json.schema.definition.TypeDefinition
 import io.bkbn.kompendium.oas.payload.Parameter
 import io.bkbn.kompendium.oas.serialization.KompendiumSerializersModule
+import io.bkbn.kompendium.playground.util.Entry
 import io.bkbn.kompendium.playground.util.ExampleResponse
 import io.bkbn.kompendium.playground.util.ExceptionResponse
+import io.bkbn.kompendium.playground.util.Response
 import io.bkbn.kompendium.playground.util.Util.baseSpec
+import io.bkbn.kompendium.playground.util.Version
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -24,6 +27,8 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import java.time.Instant
+import kotlin.reflect.typeOf
 import kotlinx.serialization.json.Json
 
 fun main() {
@@ -47,6 +52,12 @@ private fun Application.mainModule() {
     // Adds support for @Transient and @SerialName
     // If you are not using them this is not required.
     schemaConfigurator = KotlinXSchemaConfigurator()
+
+    customTypes = mapOf(
+      // generic
+      typeOf<Version>() to versionTypeDefinition,
+      typeOf<Instant>() to instantTypeDefinition,
+    )
   }
   routing {
     redoc(pageTitle = "Simple API Docs")
@@ -107,8 +118,15 @@ private fun Route.profileDocumentation() {
       description("A cool endpoint!")
       response {
         responseCode(HttpStatusCode.OK)
-        responseType<ExampleResponse>()
+        responseType<Response<Entry>>()
         description("Returns user profile information")
+        examples(
+          "test" to Response<Entry>(
+            true,
+            "test message",
+            Entry(0, Version("1.2.3"), Instant.now())
+          )
+        )
       }
       canRespond {
         responseType<ExceptionResponse>()
@@ -118,3 +136,17 @@ private fun Route.profileDocumentation() {
     }
   }
 }
+
+val versionTypeDefinition = TypeDefinition(
+  type = "Version",
+  format = "string",
+  description = "Semantic version",
+  default = "",
+)
+
+val instantTypeDefinition = TypeDefinition(
+  type = "Instant",
+  format = "string",
+  description = "An instantaneous point on the time-line",
+  default = "now()"
+)
