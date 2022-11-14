@@ -93,12 +93,14 @@ private fun Route.idDocumentation() {
         responseCode(HttpStatusCode.OK)
         responseType<ExampleResponse>()
         description("Will return whether or not the user is real 😱")
+        examples("this also fails" to listOf(Entry(0, Version("1.2.3"), Instant.now())))
       }
 
       canRespond {
         responseType<ExceptionResponse>()
         responseCode(HttpStatusCode.NotFound)
         description("Indicates that a user with this id does not exist")
+        examples("this works fine" to Entry(0, Version("1.2.3"), Instant.now()))
       }
     }
   }
@@ -121,7 +123,7 @@ private fun Route.profileDocumentation() {
         responseType<Response<Entry>>()
         description("Returns user profile information")
         examples(
-          "test" to Response<Entry>(
+          "this will fail" to Response<Entry>(
             true,
             "test message",
             Entry(0, Version("1.2.3"), Instant.now())
